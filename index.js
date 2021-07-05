@@ -1,5 +1,5 @@
 import { User, UserBankAccountsInstance as UserBankAccounts } from './User';
-import { IBAN_NUMBER_SIZE, MAX_FREE_TRANSFER_MONEY_LIMIT, MAX_TRANSFER_TIME_PERIOD } from './constants';
+import { IBAN_NUMBER_SIZE, MAX_FREE_TRANSFER_MONEY_LIMIT, MAX_TRANSFER_TIME_PERIOD, FAIL_PASSWORD_LIMIT } from './constants';
 
 const bankAccountDropdown = document.querySelector('#bankAccount');
 const transferAccountIbanNumberTextbox = document.querySelector('#transferAccountIbanNumber');
@@ -32,7 +32,6 @@ function handleSelectedBankAccount() {
     if (UserBankAccounts.isDefinedBankAccountById(selectedBankAccountId)) {
         let selectedBankAccount = UserBankAccounts.getAccountById(selectedBankAccountId);
         transferMoneyTextbox.setAttribute('max', selectedBankAccount.balance);
-        checkMoneyLimit();
         checkMoneyTransferValidation();
     }
 }
@@ -46,16 +45,16 @@ const checkMoneyLimit = () => {
     let selectedBankAccountId = bankAccountDropdown.value;
     if (UserBankAccounts.isDefinedBankAccountById(selectedBankAccountId)) {
         if (UserBankAccounts.isValidBalanceLimit(selectedBankAccountId, money)) {
-            toggleTransferButton(false);
-            toggleAlertBox('Bakiyenizin üzerinde tutar giremezsiniz.', 'alert-danger');
-        } else {
+            toggleTransferButton(true);
             toggleAlertBox();
+        } else {
+            toggleTransferButton("false");
+            toggleAlertBox('Bakiyenizin üzerinde tutar giremezsiniz.', 'alert-danger');
         }
     }
 }
 
 function handleTransferMoney() {
-    checkMoneyLimit();
     checkMoneyTransferValidation();
 }
 
@@ -91,7 +90,7 @@ function handlePriceButton() {
 
 const checkMoneyTransferValidation = () => {
     if (isSelectedBankAccount() && isFilledIbanNumber() && isFilledPrice()) {
-        toggleTransferButton(true);
+        checkMoneyLimit();
     } else {
         toggleTransferButton(false);
     }
@@ -111,14 +110,18 @@ const isFilledPrice = () => {
 
 
 const isAccountBlocked = () => {
-    return failPasswordCount > 3;
+    return failPasswordCount > FAIL_PASSWORD_LIMIT;
 }
 
 const toggleTransferButton = (open = false) => {
-    if (!!open) {
-        sendPriceButton.classList.remove('disabled');
+    if (typeof open === 'boolean') {
+        if (open) {
+            sendPriceButton.classList.remove('disabled');
+        } else {
+            sendPriceButton.classList.add('disabled');
+        }
     } else {
-        sendPriceButton.classList.add('disabled');
+        console.error('Tip hatası. Boolean beklenen yere ' + typeof open + ' geldi.');
     }
 }
 
