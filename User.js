@@ -44,7 +44,7 @@ class UserBankAccounts {
 
     isValidBalanceLimit(accountId, money) {
         let selectedAccount = this.getAccountById(accountId);
-        return money > selectedAccount.balance;
+        return money <= selectedAccount.balance;
     }
 }
 
